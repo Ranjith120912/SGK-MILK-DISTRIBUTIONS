@@ -457,3 +457,48 @@ export default function FarmersPage() {
     </div>
   );
 }
+import { db } from "@/lib/firebase"; // Adjust path to your firebase config
+import { 
+  collection, 
+  getDocs, 
+  doc, 
+  deleteDoc, 
+  writeBatch 
+} from "firebase/firestore";
+
+// --- Inside your Component ---
+
+// 1. Delete a single farmer
+const handleDeleteFarmer = async (farmerId: string) => {
+  if (confirm("Are you sure you want to delete this farmer?")) {
+    try {
+      await deleteDoc(doc(db, "farmers", farmerId));
+      alert("Farmer deleted successfully");
+      // Optional: window.location.reload(); or update state to refresh list
+    } catch (error) {
+      console.error("Error deleting farmer:", error);
+    }
+  }
+};
+
+// 2. Delete ALL farmers
+const handleDeleteAllFarmers = async () => {
+  const password = prompt("Type 'DELETE ALL' to confirm deleting every farmer record:");
+  
+  if (password === "DELETE ALL") {
+    try {
+      const querySnapshot = await getDocs(collection(db, "farmers"));
+      const batch = writeBatch(db);
+
+      querySnapshot.forEach((document) => {
+        batch.delete(document.ref);
+      });
+
+      await batch.commit();
+      alert("All farmer records have been cleared.");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting all farmers:", error);
+    }
+  }
+};
